@@ -57,7 +57,7 @@ def run():
                                 print(f"Start recording from webcam with barcode {shared_barcode}")
                                 time.sleep(3)
                                 # Tạo một đối tượng VideoWriter với các thông số phù hợp
-                                out = cv2.VideoWriter(f'./Video/{name_folder}/{name_file}_Cam{webcam_index}.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 20.0, (640, 480))
+                                out = cv2.VideoWriter(f'./Video/{name_folder}/{name_file}_Cam{webcam_index}_{shared_barcode}.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 20.0, (640, 480))
                                 if len(checked) == 0: checked.append(threading.current_thread().name)
                             # Nếu có mã vạch được lưu trữ và trùng với mã vạch hiện tại, dừng ghi hình và xóa mã vạch đã lưu cho tất cả các webcam
                     elif shared_barcode == data:
@@ -73,7 +73,7 @@ def run():
             # Nếu đang ghi hình, ghi khung hình hiện tại vào video
             if (threading.current_thread().name in checked) == False and len(checked)!=0:
                 checked.append(threading.current_thread().name)
-                out = cv2.VideoWriter(f'./Video/{name_folder}/{name_file}_Cam{webcam_index}.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 20.0, (640, 480))
+                out = cv2.VideoWriter(f'./Video/{name_folder}/{name_file}_Cam{webcam_index}_{shared_barcode}.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 20.0, (640, 480))
                 recording = True
 
             if recording:
@@ -149,8 +149,7 @@ def single_mode():
                                 print(f"Start recording from webcam {webcam_index} with barcode {shared_barcode}")
                                 time.sleep(3)
                                 # Tạo một đối tượng VideoWriter với các thông số phù hợp
-                                out = cv2.VideoWriter(f'./Video/{name_folder}/{name_file}_Cam{webcam_index}.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 20.0, (640, 480))
-                            # Nếu có mã vạch được lưu trữ và trùng với mã vạch hiện tại, dừng ghi hình và xóa mã vạch đã lưu cho tất cả các webcam
+                                out = cv2.VideoWriter(f'./Video/{name_folder}/{name_file}_Cam{webcam_index}_{shared_barcode}.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 20.0, (640, 480))
                 elif shared_barcode == data:
                                 recording = False
                                 shared_barcode = None
