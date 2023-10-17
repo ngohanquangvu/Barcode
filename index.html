@@ -1,4 +1,4 @@
-
+warnings.filterwarnings("ignore", category = DeprecationWarning, module = "pyzbar")
 
 
 logger = logging.getLogger('cv2')
@@ -54,7 +54,7 @@ def run():
                                 data_save = data
                                 recording = True
                                 os.system("cls")
-                                print(f"Bắt đầu ghi hình từ webcam với mã vạch {shared_barcode}")
+                                print(f"Start recording from webcam with barcode {shared_barcode}")
                                 time.sleep(3)
                                 # Tạo một đối tượng VideoWriter với các thông số phù hợp
                                 out = cv2.VideoWriter(f'./Video/{name_folder}/{name_file}_Cam{webcam_index}.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 20.0, (640, 480))
@@ -63,7 +63,7 @@ def run():
                     elif shared_barcode == data:
                                 recording = False
                                 shared_barcode = None
-                                print(f"Dừng ghi hình từ webcam với mã vạch {data}")
+                                print(f"Stop recording from webcam with barcode {data}")
                                 # Giải phóng đối tượng VideoWriter
                                 run = False
                                 out.release()
@@ -81,7 +81,7 @@ def run():
                     out.write(frame)
                 except: pass
             # Hiển thị khung hình trên cửa sổ theo chỉ số webcam
-            cv2.imshow(f'Wokflow manager {webcam_index}', frame)
+            cv2.imshow(f'Webcam {webcam_index}', frame)
             # Kiểm tra xem người dùng có nhấn phím q hay không
             key = cv2.waitKey(1)
             if key == ord('q'):
@@ -91,7 +91,7 @@ def run():
         if out is not None:
             out.release()
         # Đóng cửa sổ theo chỉ số webcam
-        cv2.destroyWindow(f'Wokflow manager {webcam_index}')
+        cv2.destroyWindow(f'Webcam {webcam_index}')
 
     # Tạo một danh sách để lưu trữ các luồng cho mỗi webcam kết nối
     threads = []
@@ -109,6 +109,96 @@ def run():
     # Chờ cho tất cả các luồng kết thúc
     for thread in threads:
         thread.join()
+
+def single_mode():
+    name_file = f"{datetime.datetime.now().hour}-{datetime.datetime.now().minute}-{datetime.datetime.now().second}"
+
+    # Tạo một biến chia sẻ để lưu trữ mã vạch được quét bởi bất kỳ webcam nào
+    shared_barcode = None
+
+    # Tạo một khóa chia sẻ để đồng bộ hóa việc truy cập vào biến mã vạch chia sẻ
+    shared_lock = threading.Lock()
+    # Tạo một hàm để quét mã vạch và ghi hình từ một webcam
+    def scan_and_record(webcam_index, shared_barcode, shared_lock):
+        # Tạo một đối tượng VideoCapture với chỉ số webcam
+        cap = cv2.VideoCapture(webcam_index)
+        # Khởi tạo một biến để lưu trữ trạng thái ghi hình
+        recording = False
+        out = None
+        run = True
+        # Khởi tạo một đối tượng VideoWriter để lưu video
+        # Lặp lại cho đến khi người dùng nhấn phím q
+        while run:
+            # Đọc một khung hình từ webcam
+            ret, frame = cap.read()
+            # Nếu không đọc được khung hình, thoát khỏi vòng lặp
+            if not ret:
+                break
+            # Giải mã các mã vạch từ khung hình
+            decoded_objects = pyzbar.decode(frame)
+            # Duyệt qua các mã vạch đã giải mã
+            for obj in decoded_objects:
+                # Lấy dữ liệu từ mã vạch
+                data = obj.data.decode('utf-8')
+
+                # Sử dụng một khóa chia sẻ để tránh xung đột khi truy cập vào biến mã vạch chia sẻ giữa các luồng
+                if shared_barcode is None:
+                                shared_barcode = data
+                                recording = True
+                                os.system("cls")
+                                print(f"Start recording from webcam {webcam_index} with barcode {shared_barcode}")
+                                time.sleep(3)
+                                # Tạo một đối tượng VideoWriter với các thông số phù hợp
+                                out = cv2.VideoWriter(f'./Video/{name_folder}/{name_file}_Cam{webcam_index}.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 20.0, (640, 480))
+                            # Nếu có mã vạch được lưu trữ và trùng với mã vạch hiện tại, dừng ghi hình và xóa mã vạch đã lưu cho tất cả các webcam
+                elif shared_barcode == data:
+                                recording = False
+                                shared_barcode = None
+                                run = False
+                                print(f"Stop recording from webcam {webcam_index} with barcode {data}")
+                                time.sleep(1)
+                                # Giải phóng đối tượng VideoWriter
+                                out.release()
+                                out = None
+                        
+            
+            # Nếu đang ghi hình, ghi khung hình hiện tại vào video
+
+            if recording:
+                    out.write(frame)
+            # Hiển thị khung hình trên cửa sổ theo chỉ số webcam
+            cv2.imshow(f'Webcam {webcam_index}', frame)
+            # Kiểm tra xem người dùng có nhấn phím q hay không
+            key = cv2.waitKey(1)
+            if key == ord('q'):
+                break
+        # Giải phóng các đối tượng VideoCapture và VideoWriter
+        cap.release()
+        if out is not None:
+            out.release()
+        # Đóng cửa sổ theo chỉ số webcam
+        cv2.destroyWindow(f'Webcam {webcam_index}')
+
+    # Tạo một danh sách để lưu trữ các luồng cho mỗi webcam kết nối
+    threads = []
+
+    # Lặp lại cho đến khi không thể mở được webcam nào nữa
+    for i in range(num_webcam):
+        thread = threading.Thread(target=scan_and_record, args=(i, shared_barcode, shared_lock))
+        threads.append(thread)
+        # Tăng chỉ số webcam lên 1 và giải phóng đối tượng VideoCapture
+
+    # Bắt đầu tất cả các luồng trong danh sách
+    for thread in threads:
+        thread.start()
+
+    # Chờ cho tất cả các luồng kết thúc
+    for thread in threads:
+        thread.join()
+
+    time.sleep(5)
+
+    single_mode()
 
 print("CONNECTING TO WEBCAM...")
 
@@ -132,12 +222,15 @@ banner=f"""
 ██    ██ ██████      ███████ ██ ██  ██ ██   ██     ██████  █████   ██      ██    ██ ██████  ██   ██ 
 ██ ▄▄ ██ ██   ██     ██   ██ ██  ██ ██ ██   ██     ██   ██ ██      ██      ██    ██ ██   ██ ██   ██ 
  ██████  ██   ██     ██   ██ ██   ████ ██████      ██   ██ ███████  ██████  ██████  ██   ██ ██████  
-    ▀▀                                                                                             
+    ▀▀             
+                                                                                        By Nhqvu
+
                                         [{num_webcam} WEBCAMS IS CONNECTED]
 
                                         1. BURST MODE
                                         2. NORMAL MODE
-                                        3. EXIT
+                                        3. INDEPENDENT MODE
+                                        4. EXIT
 """
 os.system("cls")
 while True:
@@ -146,6 +239,9 @@ while True:
     if choice == "1" or choice == "2":
         break
     elif choice == "3":
+         os.system("cls")
+         single_mode()
+    elif choice == "4":
         exit()
     else:
         os.system("cls")
@@ -167,4 +263,5 @@ else:
         checked = []
         data_save = ""
         os.system("cls")
+
 
