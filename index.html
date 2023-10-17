@@ -49,7 +49,7 @@ def run():
                 with shared_lock:
                     if data_save != "":
                          shared_barcode = data_save
-                    if shared_barcode is None and data is not None::
+                    if shared_barcode is None and data is not None:
                                 shared_barcode = data
                                 data_save = data
                                 recording = True
@@ -142,7 +142,7 @@ def single_mode():
                 data = obj.data.decode('utf-8')
 
                 # Sử dụng một khóa chia sẻ để tránh xung đột khi truy cập vào biến mã vạch chia sẻ giữa các luồng
-                if shared_barcode is None and data is not None::
+                if shared_barcode is None and data is not None:
                                 shared_barcode = data
                                 recording = True
                                 os.system("cls")
