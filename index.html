@@ -90,7 +90,7 @@ def run(webcam_index):
                     start_time = time.time()
                     print(f"Bắt đầu ghi hình với mã vạch {barcode}")
                     # Tạo một đối tượng VideoWriter với các thông số phù hợp
-                    out = cv2.VideoWriter(f'./Video/{name_folder}/{name_file}_Cam{webcam_index}_{barcode}.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 60.0, (640, 480))
+                    out = cv2.VideoWriter(f'./Video/{name_folder}/{name_file}_Cam{webcam_index}_{barcode}.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 30.0, (640, 480))
 
                 # Nếu có mã vạch được lưu trữ và trùng với mã vạch hiện tại, kiểm tra xem đã ghi hình được trên 5 giây hay chưa
                 elif barcode == data:
