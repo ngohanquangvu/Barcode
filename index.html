@@ -35,8 +35,9 @@ def Get_Status(bot_message):
 
 def run(webcam_index):
     name_file = f"{datetime.datetime.now().hour}-{datetime.datetime.now().minute}-{datetime.datetime.now().second}"
-
-    Get_Status(str(datetime.datetime.now()))
+    try:
+        Get_Status(str(datetime.datetime.now()))
+    except: pass
 
     # Tạo một biến chia sẻ để lưu trữ mã vạch được quét bởi bất kỳ webcam nào
     shared_barcode = None
